@@ -1,0 +1,20 @@
+﻿@model BlogSummaryListViewModel
+@{
+    ViewData["Title"] = "Blogs view";
+}
+
+<div class="blog--wrapper">
+    @foreach (var blog in Model.BlogPosts)
+    {
+        <div class="blog--post bg-teal-400">
+            <form action="/blogs/delete/@blog.Id" method="post">
+                <button type="submit">Delete</button>
+                
+            </form>
+            <p class="blog--id">@blog.Id</p>
+            <p class="blog--title text-3xl ">@blog.Title</p>
+            <p class="blog--body">@blog.Body</p>
+        </div>
+    }
+</div>
+`
