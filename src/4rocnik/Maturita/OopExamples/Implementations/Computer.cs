@@ -4,7 +4,7 @@ using System.Data;
 
 public class Computer : IComputer
 {
-    public IEntity Owner { get; init; }
+    public IEntity Owner { get; set; }
     public IMotherBoard MotherBoard { get; init; }
     public ICPU Cpu { get; init; }
     public IGPU Gpu { get; init; }
@@ -64,5 +64,17 @@ public class Computer : IComputer
     {
         Computer computer = new Computer();
         return computer;
+    }
+    
+
+    public Computer ChangeOwner(IEntity newOwner)
+    {
+        Owner = newOwner;
+        return this;
+    }
+
+    public void RemoveOwner()
+    {
+        Owner = null;
     }
 }
