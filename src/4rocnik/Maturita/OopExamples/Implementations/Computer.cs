@@ -4,6 +4,7 @@ using System.Data;
 
 public class Computer : IComputer
 {
+
     public IEntity Owner { get; set; }
     public IMotherBoard MotherBoard { get; init; }
     public ICPU Cpu { get; init; }
@@ -18,9 +19,10 @@ public class Computer : IComputer
     public bool IsOn { get; set; }
     public bool IsPersonalPC { get; }
     public bool IsCompanyPC { get; }
+    
     public void PowerUp()
     {
-        throw new NotImplementedException();
+        IsOn = true;
     }
 
     public void ShutDown()
@@ -30,7 +32,7 @@ public class Computer : IComputer
 
     public void PressPowerButton()
     {
-        if (IsOn)
+        if (IsOn = true)
         {
             IsOn = false;
         }

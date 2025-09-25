@@ -15,7 +15,7 @@ public class ComputerBuilder : IComputerBuilder
     {
         Computer computer = new Computer();
         return computer;
-        
+        throw new NotImplementedException();
     }
 
     public IComputerBuilder AddMotherBoard(IMotherBoard motherBoard)

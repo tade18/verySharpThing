@@ -36,13 +36,13 @@ public class GPU : IGPU
         {
             throw new Exception("Already connected");
         }
-        else if (AvailableConnectors.Contains != null)
+        else if (AvailableConnectors != null)
         {
             throw new InvalidConnectorException();
         }
         else if (ConnectedMonitors.Contains(monitor))
         {
-            _monitor = monitor;
+            ConnectedMonitors.ToList().Add(monitor);
         }
     }
 

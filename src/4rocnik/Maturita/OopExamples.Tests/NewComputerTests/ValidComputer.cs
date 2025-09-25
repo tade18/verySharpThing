@@ -10,7 +10,7 @@ public class ValidComputer : NewComputerTests
     }
     
     [Fact]
-    public void NewComputer_WithoutOwenerAndMonitors()
+    public void NewComputer_WithoutOwnerAndMonitors()
     {
         Assert.Null(Computer.Owner);
         Assert.Empty(Computer.Monitors);
