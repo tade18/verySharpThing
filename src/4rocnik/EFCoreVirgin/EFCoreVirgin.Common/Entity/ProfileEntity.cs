@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using EFCoreVIrgin.Data.EF.Entity.Base;
 
 namespace EFCoreVIrgin.Data.EF.Entity;
 
 [Table("Profile")]
-public class ProfileEntity
+public record ProfileEntity : BaseEntity
 {
-    public int Id { get; set; }
     public string Bio { get; set; }
     
     public int StudentId { get; set; }
