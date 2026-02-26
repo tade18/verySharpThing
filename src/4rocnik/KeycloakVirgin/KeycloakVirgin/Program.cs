@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using KeycloakVirgin.InstallExtensions;
+using KeycloakVirgin.Common.AppSettings;
+using EFCoreVIrgin.Data.EF.Context;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,92 +13,54 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services
+    .AddDatabase(builder.Configuration)
+    .AddRepositories()
+    .AddVirginAuth(builder.Configuration)
+    .AddVirginAuthSwagger(builder.Configuration);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSwagger",
-        policy =>
-        {
-            policy
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowAnyOrigin(); // dev only
-        });
-});
-
-
-var configuration = builder.Configuration;
-builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
-    {
-        o.RequireHttpsMetadata = false;
-        o.Audience = configuration["Authentication:Audience"];
-        o.MetadataAddress = configuration["Authentication:MetadataAddress"];
-        o.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ValidIssuer = configuration["Authentication:ValidIssuer"]
-        };
-    });
-
-builder.Services.AddSwaggerGen(o =>
-{
-    o.CustomSchemaIds(id => id.FullName!.Replace('+', '-'));
-
-    o.AddSecurityDefinition("Keycloak", new OpenApiSecurityScheme()
-    {
-        Type = SecuritySchemeType.OAuth2,
-        Flows = new OpenApiOAuthFlows()
-        {
-            AuthorizationCode = new OpenApiOAuthFlow()
-            {
-                AuthorizationUrl = new Uri(configuration["Keycloak:AuthorizationUrl"]),
-                TokenUrl = new Uri(configuration["Keycloak:TokenUrl"]),
-                Scopes = new Dictionary<string, string>()
-                {
-                    { "openid", "openid" },
-                    { "profile", "profile" },
-                }
-            }
-        }
-    });
-
-    o.AddSecurityRequirement(new OpenApiSecurityRequirement()
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Keycloak"
-                },
-                Scheme = "oauth2",
-                Name = "Keycloak",
-                In = ParameterLocation.Header
-            },
-            Array.Empty<string>()
-        }
-    });
-});
 
 var app = builder.Build();
+
+// Apply database migrations
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>() as DbContext;
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    if (dbContext != null)
+    {
+        try
+        {
+            logger.LogInformation("Ensuring database exists and applying migrations...");
+            dbContext.Database.EnsureCreated();
+            // dbContext.Database.Migrate();
+            
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while migrating the database. Make sure the database server is running.");
+            throw;
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    var keycloakConfig = app.Services.GetRequiredService<KeycloakConfig>();
+    
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.OAuthClientId(configuration["Keycloak:ClientId"]);
+        c.OAuthClientId(keycloakConfig.ClientId);
         c.OAuthUsePkce();
         c.OAuthScopes("openid", "profile");
     });
 }
-
-app.UseCors("AllowSwagger");
 
 app.UseHttpsRedirection();
 
